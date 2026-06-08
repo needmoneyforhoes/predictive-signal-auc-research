@@ -24,7 +24,7 @@ import glob
 import math
 import numpy as np
 
-LOG_DIR = "/home/polybot/polymarket-bot/quant_bots_logs_replay"
+LOG_DIR = "./quant_bots_logs_replay"
 GLOB = os.path.join(LOG_DIR, "race_test_btc-updown-5m-*.log")
 
 DECISION_CD = 120          # target seconds remaining

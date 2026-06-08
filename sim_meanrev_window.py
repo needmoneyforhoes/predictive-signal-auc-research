@@ -35,7 +35,7 @@ import json
 import sys
 from collections import defaultdict
 
-PANEL_PATH = "/home/polybot/polymarket-bot/data/market_panel.json"
+PANEL_PATH = "./data/market_panel.json"
 
 MID_LO, MID_HI = 0.40, 0.60
 CD_FLOOR = 16          # never fire at cd <= 15 (last 15s unreliable to fill)
@@ -274,9 +274,9 @@ def main():
     summary = {}
     for thr in THRESHOLDS:
         summary[f"{thr*100:.1f}c"] = run_first_trigger(panel, thr)
-    with open("/home/polybot/polymarket-bot/data/.meanrev_window_summary.json", "w") as f:
+    with open("./data/.meanrev_window_summary.json", "w") as f:
         json.dump({"n_markets": len(panel), "first_trigger": summary}, f, indent=2)
-    print("\n[wrote /home/polybot/polymarket-bot/.meanrev_window_summary.json]")
+    print("\n[wrote ./.meanrev_window_summary.json]")
 
 
 if __name__ == "__main__":

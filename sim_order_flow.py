@@ -34,7 +34,7 @@ import glob
 import math
 import random
 
-LOG_DIR = "/home/polybot/polymarket-bot/quant_bots_logs_replay"
+LOG_DIR = "./quant_bots_logs_replay"
 MAX_FILES = 500
 DECISION_CDS = [180, 120, 90, 60]
 CHEAP_MAX = 0.50  # cheap entry threshold
