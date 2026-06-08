@@ -1,24 +1,18 @@
 # predictive-signal-auc-research
 
-Leak-free predictive-signal research for **Polymarket BTC up/down 5-minute binary markets**: mean-reversion fade windows, order-flow direction, and per-feature out-of-sample AUC studies. Pure offline backtests — nothing here trades or touches the live bot.
+Offline leak-free backtests that measure whether candidate signals predict the winner of Polymarket BTC up/down 5-minute binary markets. Nothing here trades or touches the live bot.
 
-## Why it exists
-Before any signal is wired into the live trading engine, it has to clear an honest, leak-free out-of-sample bar. These three studies measure whether candidate microstructure/momentum/mean-reversion signals actually predict the market winner — and at *which* countdown second the edge lives — so dead signals never reach production.
+Three studies: per-feature out-of-sample AUC, order-flow direction, and a mean-reversion fade window. All are no-leak: features come only from ticks at or before the decision point, the winner label is attached after feature extraction, and the fade study uses first-trigger semantics (no future-aware sorting or dedup).
 
-## What's inside
+## Scripts
 
-| Script | Question it answers | Method |
-| --- | --- | --- |
-| `sim_predictive_power.py` | Which math signal predicts the UP/DN winner at cd≈120s? | Per-feature univariate OOS AUC (logistic, train/test split, multi-seed) + `|corr|`, plus 5-fold-CV logistic & gradient-boosting multivariate AUC, benchmarked against the efficient-market reference (raw UP mid price). |
-| `sim_order_flow.py` | Is order-flow/microstructure a direction predictor, and is mean-reversion or momentum the better cheap-entry rule? | Reconstructs UP/DN book series, computes spread/momentum/OU-reversion/depth-imbalance features at cd∈{180,120,90,60}, reports OOS AUC per feature (Mann-Whitney) and head-to-head mean-rev vs momentum WR/EV on cheap (≤$0.50) entries. |
-| `sim_meanrev_window.py` | Does fading a 20s mid-move in the coin-flip zone pay across the full entry→cd16 window? | Real-time first-trigger scan (cd high→low): in UP_mid∈[0.40,0.60], fade the side that fell over 20s; reports fade WR / EV-per-$1 by cd-window and move threshold, with a fixed-cd comparison. |
-
-All three are strictly **no-leak**: features come only from ticks at/before the decision point, the winner label is attached *after* extraction, and `sim_meanrev_window.py` uses first-trigger semantics (no future-aware sorting/dedup).
+- `sim_predictive_power.py`: per-feature univariate OOS AUC at the tick nearest cd=120 (logistic, train/test split) plus `|corr|`, then 5-fold-CV logistic and gradient-boosting multivariate AUC, benchmarked against raw UP mid price. Reports features with AUC > 0.55 and the best combined AUC.
+- `sim_order_flow.py`: reconstructs UP/DN book series, computes spread, momentum, OU-reversion, and depth-imbalance features at cd in {180,120,90,60}, reports OOS AUC per feature, and runs mean-rev vs momentum head-to-head WR/EV on cheap (<= $0.50) entries.
+- `sim_meanrev_window.py`: real-time first-trigger scan over the full entry-to-cd16 window. In UP_mid in [0.40,0.60], fade the side that fell over the last 20s. Reports fade WR and EV/$1 by cd-window and move threshold (0.8c/1.2c/1.6c/2.0c), with a fixed-cd comparison.
 
 ## Requirements
-- Python 3.9+
-- `numpy`, `scikit-learn` — required by `sim_predictive_power.py` (gradient boosting degrades gracefully if unavailable). The other two scripts are pure stdlib.
-- No wallet, key, or network access — these are read-only backtests.
+
+Python 3.9+. `sim_predictive_power.py` needs `numpy` and `scikit-learn` (gradient boosting degrades gracefully if scikit-learn is missing). The other two are pure stdlib.
 
 ```bash
 python3 -m venv venv && source venv/bin/activate
@@ -26,24 +20,22 @@ pip install numpy scikit-learn
 ```
 
 ## Usage
+
 ```bash
 source venv/bin/activate
 
-# 1) Per-feature OOS AUC at cd~120 (optional arg = max log files, default 500)
+# per-feature OOS AUC at cd~120 (optional arg = max log files, default 500)
 python3 sim_predictive_power.py 500
 
-# 2) Order-flow direction + mean-rev vs momentum cheap-entry study
+# order-flow direction + mean-rev vs momentum cheap-entry study
 python3 sim_order_flow.py
 
-# 3) Coin-flip-zone mean-reversion fade across the full window
+# coin-flip-zone mean-reversion fade across the full window
 python3 sim_meanrev_window.py
 ```
 
 ## Data
-These scripts read inputs from the private **polymarket-data** repo (paths are currently hard-coded near the top of each file — point a `DATA_DIR` / the path constants there at your local checkout):
-- `sim_predictive_power.py` and `sim_order_flow.py` parse `race_test_btc-updown-5m-*.log` replay logs from `quant_bots_logs_replay/`.
-- `sim_meanrev_window.py` loads `data/market_panel.json` and writes a machine-readable `.meanrev_window_summary.json` for the orchestrator.
 
-No model files (`.pkl`) are loaded. All `*.json`/`*.jsonl`/`*.log` data is git-ignored and must be supplied locally.
+Reads `./data` from the private polymarket-data repo; path constants are at the top of each file, point them at your local checkout. `sim_predictive_power.py` and `sim_order_flow.py` parse `race_test_btc-updown-5m-*.log` replay logs from `$DATA_DIR/quant_bots_logs_replay/`. `sim_meanrev_window.py` loads `$DATA_DIR/data/market_panel.json` and writes `.meanrev_window_summary.json`. No `.pkl` model files are loaded. All `.json`/`.jsonl`/`.log` data is git-ignored and must be supplied locally.
 
-> Private research software. No warranty; trades/handles real funds at your own risk.
+Read-only; no credentials or network access required.
