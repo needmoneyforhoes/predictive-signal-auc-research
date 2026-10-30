@@ -39,3 +39,8 @@ python3 sim_meanrev_window.py
 Reads `./data` from the private polymarket-data repo; path constants are at the top of each file, point them at your local checkout. `sim_predictive_power.py` and `sim_order_flow.py` parse `race_test_btc-updown-5m-*.log` replay logs from `$DATA_DIR/quant_bots_logs_replay/`. `sim_meanrev_window.py` loads `$DATA_DIR/data/market_panel.json` and writes `.meanrev_window_summary.json`. No `.pkl` model files are loaded. All `.json`/`.jsonl`/`.log` data is git-ignored and must be supplied locally.
 
 Read-only; no credentials or network access required.
+
+## Feedback
+
+Suggestions, improvements, or something not working? Please
+[open an issue](https://github.com/needmoneyforhoes/predictive-signal-auc-research/issues/new). Pull requests are welcome too.
